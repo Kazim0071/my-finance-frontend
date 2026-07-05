@@ -1,4 +1,5 @@
 "use client";
+import Footer from "@/components/layout/footer";
 import Navbar from "@/components/layout/navbar";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useRouter } from "next/navigation";
@@ -30,9 +31,10 @@ export default function Dashboardlayout({
     return null;
   }
   return (
-    <div>
+    <div className="min-h-screen bg-slate-50">
       <Navbar />
       {children}
+      <Footer/>
     </div>
   );
 }

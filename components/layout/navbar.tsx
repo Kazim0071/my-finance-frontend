@@ -2,7 +2,7 @@ import { authApi } from "@/features/auth/api";
 import { useAuth } from "@/features/auth/AuthContext";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const links = [
   {
@@ -58,8 +58,10 @@ function initials(first?: string, last?: string) {
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, setUser } = useAuth();
+  const { user, setUser, loading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   async function handleLogout() {
     try {
@@ -69,13 +71,27 @@ export default function Navbar() {
     router.push("/login");
   }
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+
+    if (profileOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [profileOpen]);
+
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/80 shadow-sm backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+    <nav className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 shadow-lg shadow-slate-200/20 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
         {/* Left: brand + links */}
         <div className="flex items-center gap-8">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-200">
+          <Link href="/dashboard" className="flex items-center gap-2.5 group">
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 text-white shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 transition-all duration-300">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -91,22 +107,22 @@ export default function Navbar() {
                 />
               </svg>
             </span>
-            <span className="bg-linear-to-r from-emerald-600 to-teal-600 bg-clip-text text-lg font-extrabold tracking-tight text-transparent">
+            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-xl font-bold tracking-tight text-transparent hidden sm:inline">
               Finlytics
             </span>
           </Link>
 
-          <div className="hidden items-center gap-1 md:flex">
+          <div className="hidden items-center gap-2 lg:flex">
             {links.map((link) => {
               const active = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`group relative flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition-all duration-200 ${
+                  className={`group relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                     active
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      ? "bg-emerald-500/10 text-emerald-700 shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
                   }`}
                 >
                   <svg
@@ -121,52 +137,95 @@ export default function Navbar() {
                   >
                     {link.icon}
                   </svg>
-                  {link.label}
-                  {active && (
-                    <span className="absolute inset-x-3 -bottom-3.25 h-0.5 rounded-full bg-emerald-500" />
-                  )}
+                  <span>{link.label}</span>
                 </Link>
               );
             })}
           </div>
         </div>
 
-        {/* Right: user name + logout */}
-        <div className="hidden items-center gap-3 md:flex">
-          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 shadow-sm">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-linear-to-br from-emerald-400 to-teal-500 text-xs font-semibold text-white">
-              {initials(user?.first_name, user?.last_name)}
-            </span>
-            <span className="text-sm font-medium text-slate-700">
-              {user?.first_name} {user?.last_name}
-            </span>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              className="h-4 w-4"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m0-9H5a2 2 0 00-2 2v14a2 2 0 002 2h2"
-              />
-            </svg>
-            Logout
-          </button>
+        {/* Right: user profile */}
+        <div className="hidden lg:flex items-center gap-4">
+          {loading ? (
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-slate-200 animate-pulse" />
+              <div className="h-5 w-24 rounded-lg bg-slate-200 animate-pulse" />
+            </div>
+          ) : user ? (
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-2 py-1.5 transition-all duration-200 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/10"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-xs font-bold text-white">
+                  {initials(user.first_name, user.last_name)}
+                </span>
+                <div className="hidden sm:block text-left">
+                  <div className="text-sm font-medium text-slate-900">
+                    {user.first_name} {user.last_name}
+                  </div>
+                  <div className="text-xs text-slate-500">{user.email}</div>
+                </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className={`h-4 w-4 text-slate-400 transition-transform ${
+                    profileOpen ? "rotate-180" : ""
+                  }`}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </button>
+
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/20 overflow-hidden">
+                  <div className="border-b border-slate-100 px-4 py-3">
+                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                      Account
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="h-4 w-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m0-9H5a2 2 0 00-2 2v14a2 2 0 002 2h2"
+                      />
+                    </svg>
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link href="/login" className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+                Login
+              </Link>
+              <Link href="/register" className="px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-sm font-medium text-white hover:shadow-lg hover:shadow-emerald-500/30 transition-all">
+                Register
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Mobile menu toggle */}
         <button
           onClick={() => setMobileOpen((v) => !v)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-100 md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:border-slate-300 lg:hidden"
           aria-label="Toggle menu"
         >
           <svg
@@ -188,8 +247,8 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="border-t border-slate-200 bg-white px-6 py-4 md:hidden">
-          <div className="flex flex-col gap-1">
+        <div className="border-t border-slate-100 bg-white/95 px-4 py-4 lg:hidden">
+          <div className="space-y-1">
             {links.map((link) => {
               const active = pathname === link.href;
               return (
@@ -197,10 +256,10 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                  className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
                     active
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "text-slate-600 hover:bg-slate-100"
+                      ? "bg-emerald-500/10 text-emerald-700"
+                      : "text-slate-600 hover:bg-slate-100/80"
                   }`}
                 >
                   <svg
@@ -209,7 +268,7 @@ export default function Navbar() {
                     fill="none"
                     stroke="currentColor"
                     strokeWidth={2}
-                    className={`h-4 w-4 ${active ? "text-emerald-600" : "text-slate-400"}`}
+                    className={`h-5 w-5 ${active ? "text-emerald-600" : "text-slate-400"}`}
                   >
                     {link.icon}
                   </svg>
@@ -219,21 +278,62 @@ export default function Navbar() {
             })}
           </div>
 
-          <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-emerald-400 to-teal-500 text-xs font-semibold text-white">
-                {initials(user?.first_name, user?.last_name)}
-              </span>
-              <span className="text-sm font-medium text-slate-700">
-                {user?.first_name} {user?.last_name}
-              </span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-            >
-              Logout
-            </button>
+          <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+            {loading ? (
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-slate-200 animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-24 rounded bg-slate-200 animate-pulse" />
+                  <div className="h-3 w-32 rounded bg-slate-200 animate-pulse" />
+                </div>
+              </div>
+            ) : user ? (
+              <>
+                <div className="flex items-center gap-3 rounded-lg bg-slate-50 px-4 py-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-sm font-bold text-white">
+                    {initials(user.first_name, user.last_name)}
+                  </span>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-slate-900">
+                      {user.first_name} {user.last_name}
+                    </div>
+                    <div className="text-xs text-slate-500">{user.email}</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition-all duration-200 hover:bg-red-100 hover:border-red-300"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="h-4 w-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m0-9H5a2 2 0 00-2 2v14a2 2 0 002 2h2"
+                    />
+                  </svg>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <div className="flex gap-2">
+                <Link href="/login" className="flex-1 rounded-lg px-4 py-2.5 text-center text-sm font-medium text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors">
+                  Login
+                </Link>
+                <Link href="/register" className="flex-1 rounded-lg px-4 py-2.5 text-center text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-lg hover:shadow-emerald-500/30 transition-all">
+                  Register
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}
