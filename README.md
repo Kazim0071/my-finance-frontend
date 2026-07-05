@@ -1,6 +1,6 @@
 # Personal Finance Dashboard (Frontend)
 
-A modern, responsive frontend for a personal finance management application. Built with Next.js and TypeScript, it lets users track income and expenses, manage categories, view interactive charts and reports, and get ML-powered expense predictions — all through a clean, design-first interface.
+A modern, responsive frontend for a personal finance management application. Built with Next.js and TypeScript, it lets users track income and expenses, manage categories, view interactive charts and reports, and get ML-powered expense predictions, all through a clean, design-first interface.
 
 This repository contains the **frontend** only. It consumes a Flask REST API over HTTP/JSON.
 
