@@ -16,3 +16,14 @@ export interface LoginData {
   email: string;
   password: string;
 }
+
+export interface EditProfileInput {
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
+export interface ChangePasswordInput {
+  old_password: string;
+  new_password: string;
+}
