@@ -1,11 +1,15 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { categorySchema, type CategoryForm } from "../schema";
+import {
+  categorySchema,
+  type CategoryForm,
+  type CategoryFormInput,
+} from "../schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 interface CategoryFormProps {
   onSubmit: (data: CategoryForm) => Promise<void>;
-  defaultValues?: Partial<CategoryForm>;
+  defaultValues?: Partial<CategoryFormInput>;
   isSubmitting: boolean;
 }
 
@@ -19,7 +23,7 @@ export function CategoryForm({
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<CategoryForm>({
+  } = useForm<CategoryFormInput, unknown, CategoryForm>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
       name: "",

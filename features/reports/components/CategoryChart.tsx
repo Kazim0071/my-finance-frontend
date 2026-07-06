@@ -159,8 +159,8 @@ export function CategoryChart() {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number) => [
-                  `Rs ${value.toLocaleString()}`,
+                formatter={(value) => [
+                  `Rs ${Number(value).toLocaleString()}`,
                 ]}
                 contentStyle={{
                   borderRadius: "12px",

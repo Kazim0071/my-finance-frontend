@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { MonthlyChartData } from "../types";
 import { reportsApi } from "../api";
 import {
@@ -163,7 +163,7 @@ export function MonthlyChart() {
                 tickFormatter={(v) => `Rs ${v.toLocaleString()}`}
               />
               <Tooltip
-                formatter={(value: number) => `Rs ${value.toLocaleString()}`}
+                formatter={(value) => `Rs ${Number(value).toLocaleString()}`}
                 contentStyle={{
                   borderRadius: "12px",
                   border: "1px solid #e2e8f0",
