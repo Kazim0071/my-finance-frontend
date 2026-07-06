@@ -245,7 +245,6 @@ The app will be running at `http://localhost:3000`.
 - **Frontend (Next.js)** — fully implemented client application with dashboard, transactions, categories, reports, profile management, and ML prediction card. Interactive charts built with Recharts.
 
 ### Version 3
-- **PostgreSQL migration** on the backend — production-grade database for deployment.
 - **Budget limits per category** — set monthly spending limits and see progress visually.
 - **Recurring transactions** — automatically log fixed monthly income or expenses.
 
